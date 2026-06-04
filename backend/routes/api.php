@@ -10,7 +10,7 @@ use App\Http\Controllers\Api\EmployerDashboardController;
 
 // Auth Routes
 Route::post('/register', [AuthController::class, 'register']);
-Route::post('/login', [AuthController::class, 'login']);
+Route::post('/login', [AuthController::class, 'login'])->name('login');
 
 // Public/Mutual Access Job Routes
 Route::get('/jobs', [JobController::class, 'index']);
@@ -22,7 +22,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/profile', [AuthController::class, 'profile']);
     Route::post('/logout', [AuthController::class, 'logout']);
 
-    // Candidate Specific Routes
+   
     Route::middleware('candidate')->group(function () {
         Route::post('/candidate/resume', [CandidateController::class, 'uploadResume']);
         Route::put('/candidate/profile', [CandidateController::class, 'updateProfile']);
@@ -30,7 +30,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/candidate/applications', [JobApplicationController::class, 'candidateApplications']);
     });
 
-    // Employer Specific Routes
+   
     Route::middleware('employer')->group(function () {
         Route::post('/jobs', [JobController::class, 'store']);
         Route::put('/jobs/{id}', [JobController::class, 'update']);
@@ -40,7 +40,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/employer/dashboard', [EmployerDashboardController::class, 'dashboard']);
     });
 
-    // Admin Specific Routes
+   
     Route::middleware('admin')->group(function () {
         Route::post('/admin/create-admin', [AdminController::class, 'createAdmin']);
     });
