@@ -1,0 +1,29 @@
+# Backend ignores
+backend/.env
+backend/.env.backup
+backend/.env.production
+backend/vendor/
+backend/node_modules/
+backend/public/storage
+backend/storage/*.key
+backend/storage/pail/
+backend/.phpunit.result.cache
+backend/.phpunit.cache/
+
+# Frontend ignores
+frotend/node_modules/
+frotend/dist/
+frotend/dist-ssr/
+frotend/*.local
+
+# General/IDE ignores
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
