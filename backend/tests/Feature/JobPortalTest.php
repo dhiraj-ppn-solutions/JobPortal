@@ -428,4 +428,65 @@ class JobPortalTest extends TestCase
         $response->assertJsonPath('analytics.total_applications_received', 1);
         $response->assertJsonPath('analytics.status_breakdown.applied', 1);
     }
+
+    public function test_public_registration_cannot_register_as_admin(): void
+    {
+        $response = $this->postJson('/api/register', [
+            'name' => 'Bad Admin',
+            'email' => 'badadmin@example.com',
+            'password' => 'password123',
+            'password_confirmation' => 'password123',
+            'role' => 'admin'
+        ]);
+
+        $response->assertStatus(422);
+        $this->assertDatabaseMissing('users', [
+            'email' => 'badadmin@example.com'
+        ]);
+    }
+
+    public function test_admin_seeder_correctly_seeds_initial_admin(): void
+    {
+        $this->seed();
+
+        $this->assertDatabaseHas('users', [
+            'email' => 'admin@gmail.com',
+            'role' => 'admin'
+        ]);
+    }
+
+    public function test_admin_can_create_another_admin(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $token = $admin->createToken('auth_token')->plainTextToken;
+
+        $response = $this->withToken($token)->postJson('/api/admin/create-admin', [
+            'name' => 'Sub Admin',
+            'email' => 'subadmin@example.com',
+            'password' => 'password123'
+        ]);
+
+        $response->assertStatus(201);
+        $this->assertDatabaseHas('users', [
+            'email' => 'subadmin@example.com',
+            'role' => 'admin'
+        ]);
+    }
+
+    public function test_non_admin_cannot_create_another_admin(): void
+    {
+        $candidate = User::factory()->create(['role' => 'candidate']);
+        $token = $candidate->createToken('auth_token')->plainTextToken;
+
+        $response = $this->withToken($token)->postJson('/api/admin/create-admin', [
+            'name' => 'Sub Admin',
+            'email' => 'subadmin@example.com',
+            'password' => 'password123'
+        ]);
+
+        $response->assertStatus(403);
+        $this->assertDatabaseMissing('users', [
+            'email' => 'subadmin@example.com'
+        ]);
+    }
 }

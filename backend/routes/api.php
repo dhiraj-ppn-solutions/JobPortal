@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\AdminController;
 use App\Http\Controllers\Api\CandidateController;
 use App\Http\Controllers\Api\JobController;
 use App\Http\Controllers\Api\JobApplicationController;
@@ -37,5 +38,10 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/jobs/{jobId}/applications', [JobApplicationController::class, 'jobApplications']);
         Route::put('/applications/{id}/status', [JobApplicationController::class, 'updateStatus']);
         Route::get('/employer/dashboard', [EmployerDashboardController::class, 'dashboard']);
+    });
+
+    // Admin Specific Routes
+    Route::middleware('admin')->group(function () {
+        Route::post('/admin/create-admin', [AdminController::class, 'createAdmin']);
     });
 });
