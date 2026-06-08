@@ -36,7 +36,6 @@ class AuthController extends Controller
             ], 201);
 
         } catch (Exception $e) {
-            // Logs the actual error for debugging
             Log::error('Registration Error: ' . $e->getMessage());
 
             return response()->json([

@@ -14,12 +14,8 @@ use Exception;
 
 class AdminController extends Controller
 {
-    /**
-     * Create another admin user (Admin-only).
-     */
     public function createAdmin(Request $request)
     {
-    
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|min:3|max:50',
             'email' => 'required|email|unique:users,email',
@@ -33,7 +29,6 @@ class AdminController extends Controller
             ], 422);
         }
 
-        // 2. Wrap database interaction and execution logic inside try-catch
         try {
             $user = User::create([
                 'name' => $request->name,
@@ -49,7 +44,6 @@ class AdminController extends Controller
             ], 201);
 
         } catch (Exception $e) {
-            // Logs the explicit system error to storage/logs/laravel.log
             Log::error('Admin Creation Error: ' . $e->getMessage());
 
             return response()->json([
@@ -60,9 +54,6 @@ class AdminController extends Controller
         }
     }
 
-    /**
-     * Get dashboard analytics overview.
-     */
     public function dashboardOverview()
     {
         try {
@@ -96,9 +87,6 @@ class AdminController extends Controller
         }
     }
 
-    /**
-     * List all users.
-     */
     public function listUsers()
     {
         try {
@@ -116,9 +104,6 @@ class AdminController extends Controller
         }
     }
 
-    /**
-     * Delete a user account (with cascade).
-     */
     public function deleteUser(Request $request, $id)
     {
         try {
@@ -130,7 +115,6 @@ class AdminController extends Controller
                 ], 404);
             }
 
-            // Prevent self-deletion
             if ($request->user()->id === (int)$id) {
                 return response()->json([
                     'success' => false,
@@ -138,7 +122,6 @@ class AdminController extends Controller
                 ], 400);
             }
 
-            // Cascade delete
             if ($user->role === 'candidate') {
                 if ($user->candidateProfile) {
                     $user->candidateProfile()->delete();
@@ -166,9 +149,6 @@ class AdminController extends Controller
         }
     }
 
-    /**
-     * List all jobs.
-     */
     public function listJobs()
     {
         try {
@@ -186,9 +166,6 @@ class AdminController extends Controller
         }
     }
 
-    /**
-     * Delete a job opening.
-     */
     public function deleteJob($id)
     {
         try {
@@ -200,7 +177,6 @@ class AdminController extends Controller
                 ], 404);
             }
 
-            // Delete applications first
             $job->applications()->delete();
             $job->delete();
 
@@ -217,9 +193,6 @@ class AdminController extends Controller
         }
     }
 
-    /**
-     * List all applications.
-     */
     public function listApplications()
     {
         try {
@@ -237,9 +210,6 @@ class AdminController extends Controller
         }
     }
 
-    /**
-     * Delete an application.
-     */
     public function deleteApplication($id)
     {
         try {
@@ -266,15 +236,11 @@ class AdminController extends Controller
         }
     }
 
-    /**
-     * List all employers (for admin verification).
-     */
     public function listEmployers()
     {
         try {
             $employers = User::where('role', 'employer')->get();
             
-            // Add document URLs to each employer
             $employers->map(function ($emp) {
                 if ($emp->company_document) {
                     $emp->company_document_url = asset('storage/' . $emp->company_document);
@@ -297,9 +263,6 @@ class AdminController extends Controller
         }
     }
 
-    /**
-     * Approve or reject an employer account.
-     */
     public function verifyEmployer(Request $request, $id)
     {
         $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
