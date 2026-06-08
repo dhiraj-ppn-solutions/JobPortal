@@ -24,6 +24,15 @@ class EmployerMiddleware
             ], 403);
         }
 
+        // Check if employer is approved
+        if ($request->user()->employer_status !== 'approved' && !$request->is('api/employer/verify')) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Access Denied. Your employer account is pending approval or has been rejected.',
+                'employer_status' => $request->user()->employer_status
+            ], 403);
+        }
+
         return $next($request);
     }
 }

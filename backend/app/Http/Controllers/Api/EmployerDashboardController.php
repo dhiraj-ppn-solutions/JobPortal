@@ -58,6 +58,11 @@ class EmployerDashboardController extends Controller
             ->latest()
             ->get();
 
+        // All job listings list (both active and inactive)
+        $allJobListings = JobListing::where('employer_id', $employer->id)
+            ->latest()
+            ->get();
+
         return response()->json([
             'success' => true,
             'analytics' => [
@@ -67,7 +72,82 @@ class EmployerDashboardController extends Controller
                 'status_breakdown' => $statusBreakdown
             ],
             'recent_applications' => $recentApplications,
-            'active_job_listings' => $activeJobListings
+            'active_job_listings' => $activeJobListings,
+            'all_job_listings' => $allJobListings
+        ]);
+    }
+
+    /**
+     * Get employer verification company details.
+     */
+    public function getVerification(Request $request)
+    {
+        $employer = $request->user();
+        
+        $documentUrl = null;
+        if ($employer->company_document) {
+            $documentUrl = asset('storage/' . $employer->company_document);
+        }
+
+        return response()->json([
+            'success' => true,
+            'company_name' => $employer->company_name,
+            'company_website' => $employer->company_website,
+            'company_description' => $employer->company_description,
+            'company_document' => $employer->company_document,
+            'company_document_url' => $documentUrl,
+            'employer_status' => $employer->employer_status,
+        ]);
+    }
+
+    /**
+     * Submit/update employer verification company details and documents.
+     */
+    public function submitVerification(Request $request)
+    {
+        $employer = $request->user();
+
+        // If they already have a document, it's optional to upload a new one.
+        // Otherwise, a document is required.
+        $documentRule = $employer->company_document ? 'nullable|file|mimes:pdf,jpg,png,jpeg,doc,docx|max:5120' : 'required|file|mimes:pdf,jpg,png,jpeg,doc,docx|max:5120';
+
+        $request->validate([
+            'company_name' => 'required|string|min:3|max:100',
+            'company_website' => 'required|url|max:255',
+            'company_description' => 'required|string|min:10',
+            'company_document' => $documentRule,
+        ]);
+
+        $data = [
+            'company_name' => $request->company_name,
+            'company_website' => $request->company_website,
+            'company_description' => $request->company_description,
+            'employer_status' => 'pending', // Reverts to pending when updated
+        ];
+
+        if ($request->hasFile('company_document')) {
+            // Delete old document if it exists
+            if ($employer->company_document && \Illuminate\Support\Facades\Storage::disk('public')->exists($employer->company_document)) {
+                \Illuminate\Support\Facades\Storage::disk('public')->delete($employer->company_document);
+            }
+            
+            // Store new document
+            $path = $request->file('company_document')->store('employer_documents', 'public');
+            $data['company_document'] = $path;
+        }
+
+        $employer->update($data);
+
+        $documentUrl = null;
+        if ($employer->company_document) {
+            $documentUrl = asset('storage/' . $employer->company_document);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Verification details submitted successfully. Awaiting admin approval.',
+            'user' => $employer,
+            'company_document_url' => $documentUrl
         ]);
     }
 }

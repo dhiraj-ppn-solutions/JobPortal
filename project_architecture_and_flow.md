@@ -208,3 +208,107 @@ classDiagram
    * Displays totals (jobs posted, active jobs, applications received).
    * Breaks down application status counts (shortlisted, accepted, etc.).
    * Lists the 5 most recent application submissions with profile snapshots.
+
+---
+
+## 6. Frontend File Structure & Roles
+
+Here is the role of each key frontend file that was built to complete the portal:
+
+```
+jobPortal/frontend/
+├── src/
+│   ├── api/
+│   │   └── axios.js               # Configures Axios instance, sets base URL (http://127.0.0.1:8000/api), and injects the Sanctum Bearer token automatically via interceptors.
+│   ├── context/
+│   │   └── AuthContext.jsx        # Manages global user session state, local storage persistence, login, logout, and has a refreshProfile method to fetch profile changes dynamically.
+│   ├── layouts/                   # Reusable workspace and structure layouts
+│   │   ├── UserLayout.jsx         # Layout with sidebar + content pane for candidate & employer workspaces
+│   │   ├── AdminLayout.jsx        # Layout with sidebar + content pane for admin workspace
+│   │   └── AuthLayout.jsx         # Layout card wrapper for auth forms (Login & Register)
+│   ├── components/                # Reusable UI component blocks
+│   │   ├── auth/
+│   │   │   ├── LoginForm.jsx      # Form inputs for user email/password login
+│   │   │   ├── LoginHeader.jsx    # Header welcome title for login
+│   │   │   ├── RegisterForm.jsx   # Form inputs for user email, password, and role registration
+│   │   │   ├── RegisterHeader.jsx # Header welcome title for registration
+│   │   │   └── AuthAlert.jsx      # Generic status alert banner for success or error notices
+│   │   ├── user/
+│   │   │   ├── UserHeader.jsx     # Reusable layout header for candidate/employer views
+│   │   │   ├── UserSidebar.jsx    # Reusable layout sidebar for user workspace options
+│   │   │   ├── JobSearchForm.jsx  # Input filters for job listing search
+│   │   │   ├── JobList.jsx        # Job listings list panel
+│   │   │   ├── JobDetailsPanel.jsx # Sidebar showing details & apply form for a selected job
+│   │   │   ├── ApplicationHistoryTable.jsx # Table of previously applied jobs
+│   │   │   ├── ProfileForm.jsx    # Key details update form for candidates
+│   │   │   ├── ResumeUploader.jsx # Resume upload card and active CV controls
+│   │   │   ├── DashboardStats.jsx # Metric summary cards for employers
+│   │   │   ├── PipelineBreakdown.jsx # Breakdown panel of applications statuses
+│   │   │   ├── RecentApplicantsList.jsx # Feed of recent applicants with status dropdowns
+│   │   │   ├── JobForm.jsx        # Input fields to post or edit a job opening
+│   │   │   └── JobOpeningsTable.jsx # Table listing employer openings with edit/delete actions
+│   │   ├── admin/
+│   │   │   ├── AdminHeader.jsx    # Reusable layout header for admin workspace
+│   │   │   └── AdminSidebar.jsx   # Reusable layout sidebar for admin workspace options
+│   │   └── common/
+│   │       └── Loader.jsx         # Generic loader component
+│   ├── hooks/                     # Custom React hooks encapsulating state and effects
+│   │   ├── useLogin.js            # Custom hook managing login credentials and redirects
+│   │   ├── useRegister.js         # Custom hook managing user registration state and redirects
+│   │   ├── useFindJobs.js         # Custom hook managing job board searching and applying
+│   │   ├── useCandidateApplications.js # Custom hook fetching candidate applications history
+│   │   ├── useProfileAndResume.js # Custom hook managing profile fields and resume uploads
+│   │   ├── useEmployerDashboard.js # Custom hook for stats, breakdowns, and application status updates
+│   │   ├── usePostJob.js          # Custom hook managing posting/editing form logic
+│   │   └── useManageJobs.js       # Custom hook fetching posted jobs and deleting listings
+│   ├── services/                  # Business logic API wrappers connecting frontend to backend endpoints
+│   │   ├── authService.js         # API calls for login, register, logout, and profile check
+│   │   ├── jobService.js          # API calls for listing active jobs, job details, and employer job CRUD
+│   │   ├── applicationService.js  # API calls for applying to jobs, applicant lists, and status changes
+│   │   ├── userService.js         # API calls for profile updates and resume uploads (multipart form data)
+│   │   └── employerService.js     # API call for fetching dashboard analytics metrics
+│   ├── routes/                    # Routing, layouts, and route guards
+│   │   ├── AppRoutes.jsx          # Configures the React Router mapping paths to components (handles public/auth redirects)
+│   │   ├── ProtectedRoute.jsx     # Route guard shielding pages from unauthenticated guests (redirects to /login)
+│   │   └── AdminRoute.jsx         # Route guard shielding pages from non-admin users (redirects to user dashboard)
+│   ├── pages/                     # High-level entry point containers
+│   │   ├── auth/
+│   │   │   ├── Login.jsx          # Login view page wrapping LoginForm inside AuthLayout
+│   │   │   └── Register.jsx       # Register view page wrapping RegisterForm inside AuthLayout
+│   │   ├── admin/
+│   │   │   └── Dashboard.jsx      # Admin dashboard wrapping stats grid inside AdminLayout
+│   │   └── user/
+│   │       ├── Dashboard.jsx      # Dynamic candidate/employer dashboard page wrapping tabs in UserLayout
+│   │       ├── FindJobs.jsx       # Candidate job search board (minimized)
+│   │       ├── CandidateApplications.jsx # Candidate applications history (minimized)
+│   │       ├── ProfileAndResume.jsx # Candidate profile and CV upload view (minimized)
+│   │       ├── EmployerDashboard.jsx # Employer overview dashboard view (minimized)
+│   │       ├── PostJob.jsx        # Employer job creation and editing view (minimized)
+│   │       └── ManageJobs.jsx     # Employer openings list view (minimized)
+│   ├── App.jsx                    # Root entry rendering AppRoutes
+│   └── main.jsx                   # Entry point wrapping the application in StrictMode and AuthProvider
+```
+
+---
+
+## 7. Frontend Flow of Key Components
+
+### A. Initial Boot & Auth Restoration
+1. When a user opens the web app, `main.jsx` starts the app.
+2. `AuthContext.jsx` initializes:
+   * Checks `localStorage` for a saved token.
+   * If found, sets loading to `true` and hits `/api/profile` to retrieve user details (Name, Email, Role, Profile details).
+   * Once loaded, updates `user` state and sets loading to `false`.
+
+### B. Secure Routing Guards
+1. If an unauthenticated user tries to visit `/user/dashboard`, `ProtectedRoute.jsx` intercepts and redirects them to `/login`.
+2. If a Candidate tries to visit `/admin/dashboard`, `AdminRoute.jsx` intercepts and redirects them to `/user/dashboard`.
+3. If the auth state is still loading profile details, the route guards render a simple `Loading...` screen to prevent flickering.
+
+### C. Dynamic Panel Rendering
+The `/user/dashboard` route points to `user/Dashboard.jsx`. This component acts as a router itself:
+* Sidebar buttons change an `activeTab` component state.
+* The main workspace renders a sub-component based on `activeTab`:
+  * **Employer Tabs:** `employer_dashboard` (Overview), `post_job` (Create/Edit Form), `manage_jobs` (Listings table).
+  * **Candidate Tabs:** `find_jobs` (Listings & Search), `applications` (Applied jobs tracker), `profile` (Resume uploader & Details).
+

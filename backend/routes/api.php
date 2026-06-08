@@ -20,6 +20,7 @@ Route::get('/jobs/{id}', [JobController::class, 'show']);
 Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/profile', [AuthController::class, 'profile']);
+    Route::put('/profile', [AuthController::class, 'updateProfile']);
     Route::post('/logout', [AuthController::class, 'logout']);
 
    
@@ -38,10 +39,21 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/jobs/{jobId}/applications', [JobApplicationController::class, 'jobApplications']);
         Route::put('/applications/{id}/status', [JobApplicationController::class, 'updateStatus']);
         Route::get('/employer/dashboard', [EmployerDashboardController::class, 'dashboard']);
+        Route::post('/employer/verify', [EmployerDashboardController::class, 'submitVerification']);
+        Route::get('/employer/verify', [EmployerDashboardController::class, 'getVerification']);
     });
 
    
     Route::middleware('admin')->group(function () {
+        Route::get('/admin/overview', [AdminController::class, 'dashboardOverview']);
         Route::post('/admin/create-admin', [AdminController::class, 'createAdmin']);
+        Route::get('/admin/users', [AdminController::class, 'listUsers']);
+        Route::delete('/admin/users/{id}', [AdminController::class, 'deleteUser']);
+        Route::get('/admin/jobs', [AdminController::class, 'listJobs']);
+        Route::delete('/admin/jobs/{id}', [AdminController::class, 'deleteJob']);
+        Route::get('/admin/applications', [AdminController::class, 'listApplications']);
+        Route::delete('/admin/applications/{id}', [AdminController::class, 'deleteApplication']);
+        Route::get('/admin/employers', [AdminController::class, 'listEmployers']);
+        Route::put('/admin/employers/{id}/verify', [AdminController::class, 'verifyEmployer']);
     });
 });

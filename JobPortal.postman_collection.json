@@ -1,0 +1,733 @@
+{
+  "info": {
+    "_postman_id": "8c5eb3c0-0f2c-473d-9d41-d8a4392eb1ba",
+    "name": "Job Portal API Collection",
+    "description": "Postman collection for testing the Job Portal Backend APIs. Configure the global or collection variables `base_url` and `token` for seamless testing.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1. Authentication",
+      "item": [
+        {
+          "name": "Register User (Candidate/Employer)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"John Doe\",\n    \"email\": \"john@example.com\",\n    \"password\": \"password123\",\n    \"password_confirmation\": \"password123\",\n    \"role\": \"candidate\" \n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/register",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "register"
+              ]
+            },
+            "description": "Register a new user. Role must be either 'candidate' or 'employer'. Admin role cannot be registered publicly."
+          },
+          "response": []
+        },
+        {
+          "name": "Login User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.token) {",
+                  "    pm.collectionVariables.set(\"token\", jsonData.token);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"email\": \"john@example.com\",\n    \"password\": \"password123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "login"
+              ]
+            },
+            "description": "Authenticate user credentials. Returns a Sanctum token which is automatically saved to the collection variable `token`."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Profile",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/profile",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "profile"
+              ]
+            },
+            "description": "Retrieve profile information of the currently authenticated user."
+          },
+          "response": []
+        },
+        {
+          "name": "Logout User",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/logout",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "logout"
+              ]
+            },
+            "description": "Revoke the current Sanctum token."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "2. Public Job Search",
+      "item": [
+        {
+          "name": "List All Jobs (With Filters)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/jobs?keyword=Laravel&location=Remote&job_type=Remote",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "jobs"
+              ],
+              "query": [
+                {
+                  "key": "keyword",
+                  "value": "Laravel",
+                  "description": "Searches inside title, company_name, description, requirements"
+                },
+                {
+                  "key": "location",
+                  "value": "Remote",
+                  "description": "Filter by location"
+                },
+                {
+                  "key": "job_type",
+                  "value": "Remote",
+                  "description": "Filter by job type"
+                }
+              ]
+            },
+            "description": "Fetch all active jobs. Supports search filters."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Single Job",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/jobs/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "jobs",
+                "1"
+              ]
+            },
+            "description": "Retrieve details of a single job post."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "3. Candidate Actions",
+      "item": [
+        {
+          "name": "Update Profile Details",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"skills\": \"Laravel, PHP, Vue.js, MySQL\",\n    \"experience\": \"4 Years of Backend Experience\",\n    \"education\": \"Bachelor of Science in Computer Science\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/candidate/profile",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "candidate",
+                "profile"
+              ]
+            },
+            "description": "Update candidate profile fields."
+          },
+          "response": []
+        },
+        {
+          "name": "Upload Resume",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "resume",
+                  "type": "file",
+                  "src": [],
+                  "description": "PDF/DOC/DOCX file up to 5MB"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/candidate/resume",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "candidate",
+                "resume"
+              ]
+            },
+            "description": "Upload a candidate's resume. Deletes the previous resume if it exists. Must be sent as a multipart/form-data request."
+          },
+          "response": []
+        },
+        {
+          "name": "Apply for a Job",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"cover_letter\": \"Dear hiring manager, I am very interested in this Laravel Developer position. I have 4 years of experience and look forward to hearing from you.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/jobs/1/apply",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "jobs",
+                "1",
+                "apply"
+              ]
+            },
+            "description": "Apply for a specific job listing. Rejects application if the candidate hasn't uploaded a resume, or has already applied to this job."
+          },
+          "response": []
+        },
+        {
+          "name": "View My Submitted Applications",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/candidate/applications",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "candidate",
+                "applications"
+              ]
+            },
+            "description": "View all applications submitted by the current authenticated candidate."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "4. Employer Actions",
+      "item": [
+        {
+          "name": "Create Job Listing",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"title\": \"Senior Backend Engineer (Laravel)\",\n    \"company_name\": \"Tech Solutions Inc.\",\n    \"location\": \"Remote\",\n    \"salary\": \"$100,000 - $120,000\",\n    \"job_type\": \"Remote\",\n    \"description\": \"We are looking for a Senior Laravel Developer to join our core backend engineering team...\",\n    \"requirements\": \"5+ years of PHP development, expertise in Laravel and MySQL databases.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/jobs",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "jobs"
+              ]
+            },
+            "description": "Create a new job posting. Requires Employer authorization."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Job Listing",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"title\": \"Updated Job Title\",\n    \"company_name\": \"Tech Solutions Inc.\",\n    \"location\": \"Remote\",\n    \"salary\": \"$105,000 - $125,000\",\n    \"job_type\": \"Remote\",\n    \"description\": \"Updated description...\",\n    \"requirements\": \"Updated requirements...\",\n    \"status\": \"active\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/jobs/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "jobs",
+                "1"
+              ]
+            },
+            "description": "Update an existing job posting. Only the posting owner (Employer) can modify it."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Job Listing",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/jobs/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "jobs",
+                "1"
+              ]
+            },
+            "description": "Delete (close) a job listing."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Applications for a Specific Job",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/jobs/1/applications",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "jobs",
+                "1",
+                "applications"
+              ]
+            },
+            "description": "View all job applications received for a specific job post."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Application Status",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"status\": \"shortlisted\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/applications/1/status",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "applications",
+                "1",
+                "status"
+              ]
+            },
+            "description": "Advance a candidate through the pipeline. Allowed status values: `applied`, `reviewing`, `shortlisted`, `rejected`, `accepted`."
+          },
+          "response": []
+        },
+        {
+          "name": "View Employer Dashboard Analytics",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/employer/dashboard",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "employer",
+                "dashboard"
+              ]
+            },
+            "description": "Load core metrics: total jobs, active jobs, total applications received, status breakdown, and recent applications."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "5. Admin Actions",
+      "item": [
+        {
+          "name": "Create Another Admin User",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"Sub Admin User\",\n    \"email\": \"subadmin@example.com\",\n    \"password\": \"password123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/admin/create-admin",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "create-admin"
+              ]
+            },
+            "description": "Create a new Admin account. Only allowed for existing authenticated Admin users."
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          ""
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          ""
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://127.0.0.1:8000/api",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    }
+  ]
+}
